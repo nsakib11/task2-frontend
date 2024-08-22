@@ -1,8 +1,12 @@
 import DepartmentTable from "./components/DepartmentTable";
 import DesignationTable from "./components/DesignationTable";
+import EmployeeList from "./components/List";
 
 export default function Home() {
   return (
+    <>
+    
+    <EmployeeList/>
     <div className=" bg-gray-100 p-8  text-center">
       <h1 className="text-2xl  font-bold mb-4 text-gray-800">
         Department Table Example
@@ -15,5 +19,7 @@ export default function Home() {
         <DesignationTable />
       </div>
     </div>
+    </>
+    
   );
 }
