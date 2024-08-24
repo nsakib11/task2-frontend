@@ -32,7 +32,7 @@ const RequisitionDetailsPage = () => {
         const response = await axiosInstance.get(`/requisitions/details/${orderId}`);
         setEmployee(response.data);
         setStatus(response.data.status);
-        console.log(response) // Set the initial status
+        
       } catch (err) {
         setError(err.response?.data || "Error fetching employee details");
         setEmployee(null);

@@ -65,7 +65,7 @@ const RequisitionPage = () => {
       setApiError(null);
       const response = await axiosInstance.post(`/requisitions/${employee.id}`, requisitions);
       const orderId = response.data[0].orderId; // Assuming all requisitions share the same orderId
-      router.push(`/requisition/details/${orderId}`);
+      router.push(`/requisition/order`);
     } catch (error) {
       setApiError(error.response?.data || "Error submitting requisitions");
     }
