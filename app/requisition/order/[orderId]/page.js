@@ -4,23 +4,12 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../../utils/axiosConfig";
 
-// const statusOptions = [
-//   "Initiated",
-//   "Order Placed",
-//   "Waiting for Delivery",
-//   "Ready for Delivery",
-//   "Delivered",
-// ];
-
 const RequisitionDetailsPageOrder = () => {
   const { orderId } = useParams();
   const [employee, setEmployee] = useState(null);
-  const [requisition, setRequisition] = useState(null);
+  const [requisitions, setRequisitions] = useState([]); // Changed to an array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // const [status, setStatus] = useState("");
-  // const [updateError, setUpdateError] = useState(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -30,18 +19,19 @@ const RequisitionDetailsPageOrder = () => {
       setError(null);
 
       try {
-        const [employeeResponse, requisitionResponse] = await Promise.all([
-          axiosInstance.get(`requisitions/details/${orderId}`),
+        // Fetch both employee details and requisitions
+        const [employeeResponse, requisitionsResponse] = await Promise.all([
+          axiosInstance.get(`/requisitions/details/${orderId}`),
           axiosInstance.get(`/requisitions/order/${orderId}`),
         ]);
 
         setEmployee(employeeResponse.data);
-        setRequisition(requisitionResponse.data);
-        // setStatus(requisitionResponse.data.status); // Set the initial status
+        setRequisitions(requisitionsResponse.data); // Set array of requisitions
       } catch (err) {
+        console.error("Error fetching data:", err); // Improved error logging
         setError(err.response?.data || "Error fetching details");
         setEmployee(null);
-        setRequisition(null);
+        setRequisitions([]);
       } finally {
         setLoading(false);
       }
@@ -49,20 +39,6 @@ const RequisitionDetailsPageOrder = () => {
 
     fetchData();
   }, [orderId]);
-
-  // const handleStatusChange = async (event) => {
-  //   const newStatus = event.target.value;
-  //   setStatus(newStatus);
-
-  //   try {
-  //     await axiosInstance.patch(`/requisitions/status/${orderId}`, null, {
-  //       params: { status: newStatus },
-  //     });
-  //     setUpdateError(null);
-  //   } catch (error) {
-  //     setUpdateError(error.response?.data || "Error updating status");
-  //   }
-  // };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <div className="text-red-500">{error}</div>;
@@ -72,55 +48,43 @@ const RequisitionDetailsPageOrder = () => {
       <h1 className="text-2xl font-bold mb-4">
         Employee and Requisition Details
       </h1>
-      {employee && requisition && (
+      {employee && (
         <>
           <p>
-            <strong>Order ID:</strong> {orderId}
+            <strong>Order ID:</strong>{" "}
+            <span className="text-blue-500">{orderId}</span>
           </p>
           <p>
-            <strong>Name:</strong> {employee.name}
+            <strong>Name:</strong> {employee.name || "N/A"}
           </p>
           <p>
-            <strong>Department:</strong> {employee.department}
+            <strong>Department:</strong> {employee.department || "N/A"}
           </p>
           <p>
-            <strong>Designation:</strong> {employee.designation}
+            <strong>Designation:</strong> {employee.designation || "N/A"}
           </p>
           <div className="mt-8">
-            {/* Status Dropdown
-            <div className="mt-4">
-              <label className="block text-gray-700">Update Status</label>
-              <select
-                value={status}
-                onChange={handleStatusChange}
-                className="w-full p-2 border border-gray-300 rounded"
-              >
-                {statusOptions.map((statusOption) => (
-                  <option key={statusOption} value={statusOption}>
-                    {statusOption}
-                  </option>
-                ))}
-              </select>
-              {updateError && (
-                <div className="text-red-500 mt-2">{updateError}</div>
-              )}
-            </div> */}
             <h2 className="text-xl font-bold mb-4">Requisition Details</h2>
-            <div className="mb-4">
-              <p>
-                <strong>Product:</strong> {requisition.product}
-              </p>
-              <p>
-                <strong>Quantity:</strong> {requisition.quantity}
-              </p>
-              <p>
-                <strong>Description:</strong> {requisition.description}
-              </p>
-
-              <p>
-                <strong>Status:</strong> {requisition.status}
-              </p>
-            </div>
+            {requisitions.length > 0 ? (
+              requisitions.map((req, index) => (
+                <div key={index} className="mb-4">
+                  <p>
+                    <strong>Product:</strong> {req.product || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Quantity:</strong> {req.quantity || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Description:</strong> {req.description || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {req.status || "N/A"}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p>No requisitions found.</p>
+            )}
           </div>
         </>
       )}

@@ -10,7 +10,6 @@ const RequisitionTablePage = () => {
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  // Define backend status values and their human-readable equivalents
   const statusMap = {
     'INITIATED': 'Initiated',
     'ORDER_PLACED': 'Order Placed',
@@ -18,8 +17,6 @@ const RequisitionTablePage = () => {
     'READY_FOR_DELIVERY': 'Ready for Delivery',
     'DELIVERED': 'Delivered'
   };
-
-  const statusOptions = Object.values(statusMap);
 
   useEffect(() => {
     const fetchRequisitions = async () => {
@@ -33,12 +30,18 @@ const RequisitionTablePage = () => {
               name: employeeDetails.data.name,
               designation: employeeDetails.data.designation,
               department: employeeDetails.data.department,
-              // Map the backend status to the display status
               status: statusMap[req.status] || 'Initiated'
             };
           })
         );
-        setRequisitions(requisitionData);
+
+        const sortedRequisitions = requisitionData.sort((a, b) => {
+          if (a.status === 'Initiated' && b.status !== 'Initiated') return -1;
+          if (a.status !== 'Initiated' && b.status === 'Initiated') return 1;
+          return 0;
+        });
+
+        setRequisitions(sortedRequisitions);
       } catch (err) {
         setError(err.response?.data || 'Error fetching requisitions');
       } finally {
@@ -51,11 +54,11 @@ const RequisitionTablePage = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      // Convert display status back to backend status
       const backendStatus = Object.keys(statusMap).find(key => statusMap[key] === newStatus);
       await axiosInstance.patch(`/requisitions/status/${orderId}`, null, {
         params: { status: backendStatus }
       });
+
       setRequisitions(prevState =>
         prevState.map(req =>
           req.orderId === orderId ? { ...req, status: newStatus } : req
@@ -85,8 +88,11 @@ const RequisitionTablePage = () => {
         </thead>
         <tbody>
           {requisitions.map((requisition, index) => (
-            <tr key={index}>
-              <td className="border border-gray-300 p-2">{requisition.orderId}</td>
+            <tr
+              key={index}
+              className={requisition.status === 'Initiated' ? 'bg-yellow-100' : ''}
+            >
+              <td className="border border-gray-300 p-2 text-blue-500">{requisition.orderId}</td>
               <td className="border border-gray-300 p-2">{requisition.name}</td>
               <td className="border border-gray-300 p-2">{requisition.designation}</td>
               <td className="border border-gray-300 p-2">{requisition.department}</td>
@@ -96,7 +102,7 @@ const RequisitionTablePage = () => {
                   onChange={(e) => handleStatusChange(requisition.orderId, e.target.value)}
                   className="p-2 border border-gray-300 rounded"
                 >
-                  {statusOptions.map((statusOption) => (
+                  {Object.values(statusMap).map((statusOption) => (
                     <option key={statusOption} value={statusOption}>
                       {statusOption}
                     </option>
@@ -110,10 +116,7 @@ const RequisitionTablePage = () => {
                 >
                   Details
                 </button>
-                
-                
               </td>
-              
             </tr>
           ))}
         </tbody>
